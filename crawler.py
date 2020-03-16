@@ -4,133 +4,121 @@ import datetime
 from functools import wraps
 
 
-class Crawler:
+def crawler_decorator(crawler):
+    @wraps(crawler)
+    def wrapper(url, *args, **kwargs):
+        print(crawler.__name__, "start crawl in", url)
+        return crawler(url, *args, **kwargs)
 
-    def __init__(self, url):
-        self._url = url
+    return wrapper
 
-    @property
-    def url(self):
-        return self._url
 
-    @url.setter
-    def url(self, url):
-        self._url = url
+@crawler_decorator
+def director_page_crawler(url):
+    director = {}
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text, "html.parser")
+    try:
+        #       director's photo
+        image = soup.find(id='name-poster')
+        director['photo'] = image['src']
 
-    def crawler_decorator(crawler):
-        @wraps(crawler)
-        def wrapper(self, *args, **kwargs):
-            print(crawler.__name__, "start crawl in", self.url)
-            return crawler(self, *args, **kwargs)
+        #      director's name
+        name = soup.find(class_='itemprop')
+        director['name'] = name.text
 
-        return wrapper
+        #      director's age
+        age = soup.find(id="name-born-info")
+        director['age'] = int(datetime.datetime.now().year) - int(str(age.find_all('a')[1].text))
 
-    @crawler_decorator
-    def director_page_crawler(self):
-        url = self._url
-        director = {}
-        r = requests.get(url)
-        soup = BeautifulSoup(r.text, "html.parser")
-        try:
-            #       director's photo
-            image = soup.find(id='name-poster')
-            director['photo'] = image['src']
+        #      director's nation
+        nation = soup.find(id="name-born-info")
+        director['nation'] = nation.find_all('a')[2].text.split(',')[-1].strip()
 
-            #      director's name
-            name = soup.find(class_='itemprop')
-            director['name'] = name.text
+        #      director movies
+        movies_div = soup.find(id="filmo-head-director")
+        movies_div = movies_div.fetchNextSiblings()
+        movies_links = movies_div[0].find_all('a')
 
-            #      director's age
-            age = soup.find(id="name-born-info")
-            director['age'] = int(datetime.datetime.now().year) - int(str(age.find_all('a')[1].text))
+        movies = []
+        for i in movies_links:
+            if 'class' in str(i) or 'TV Series' in str(i):
+                continue
+            movie_url = i['href']
+            movie_name = i.text
+            movie = {'name': movie_name, 'url': movie_url}
+            movies.append(movie)
+        director['movies'] = movies
 
-            #      director's nation
-            nation = soup.find(id="name-born-info")
-            director['nation'] = nation.find_all('a')[2].text.split(',')[-1].strip()
+    except Exception:
+        raise Exception('This page is not director page')
 
-            #      director movies
-            movies_div = soup.find(id="filmo-head-director")
-            movies_div = movies_div.fetchNextSiblings()
-            movies_links = movies_div[0].find_all('a')
+    return director
 
-            movies = []
-            for i in movies_links:
-                if 'class' in str(i) or 'TV Series' in str(i):
-                    continue
-                movie_url = i['href']
-                movie_name = i.text
-                movie = {'name': movie_name, 'url': movie_url}
-                movies.append(movie)
-            director['movies'] = movies
 
-        except Exception:
-            raise Exception('This page is not director page')
+@crawler_decorator
+def movie_page_crawler(url):
+    movie = {}
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text, "html.parser")
+    try:
+        #      movie's title and year
+        title = soup.find(id="ratingWidget")
 
-        return director
+        movie['title'] = title.find('p').text.split('\n')[2].strip()
 
-    @crawler_decorator
-    def movie_page_crawler(self):
-        url = self._url
-        movie = {}
-        r = requests.get(url)
-        soup = BeautifulSoup(r.text, "html.parser")
-        try:
-            #      movie's title and year
-            title = soup.find(id="ratingWidget")
+        year = title.find('p').text.split('\n')[3].strip()
+        year = year[1:-1]
+        numeric_year = int(year)
 
-            movie['title'] = title.find('p').text.split('\n')[2].strip()
+        movie['year'] = year
 
-            year = title.find('p').text.split('\n')[3].strip()
-            year = year[1:-1]
-            numeric_year = int(year)
+        #      movie rate and num of user ratings
+        rate = soup.find(class_="ratingValue")
+        rate_ = rate.find('strong')['title'].split('based on')[0].strip()
+        num_of_rating = rate.find('strong')['title'].split('based on')[1].split('user rating')[0].strip().split(',')
+        num_of_rating_ = "".join(num_of_rating)
 
-            movie['year'] = year
+        movie['rate'] = rate_
 
-            #      movie rate and num of user ratings
-            rate = soup.find(class_="ratingValue")
-            rate_ = rate.find('strong')['title'].split('based on')[0].strip()
-            num_of_rating = rate.find('strong')['title'].split('based on')[1].split('user rating')[0].strip().split(',')
-            num_of_rating_ = "".join(num_of_rating)
+        movie['rates_num'] = num_of_rating_
 
-            movie['rate'] = rate_
+        #      rates num filter
+        if int(movie['rates_num']) < 10000:
+            return {}
 
-            movie['rates_num'] = num_of_rating_
+        #       movie's poster
+        poster = soup.find(class_="poster")
 
-            #      rates num filter
-            if int(movie['rates_num']) < 10000:
-                return {}
+        movie['poster'] = poster.find_all('img')[0]['src']
 
-            #       movie's poster
-            poster = soup.find(class_="poster")
+        #      movie's genres
+        genres = soup.find(class_="title_block")
+        genres = genres.find(class_="subtext")
+        genres = genres.find_all('a')
+        genres_list = []
+        for i in range(len(genres) - 1):
+            genres_list.append(genres[i].text)
 
-            movie['poster'] = poster.find_all('img')[0]['src']
+        movie['genres'] = genres_list
 
-            #      movie's genres
-            genres = soup.find(class_="title_block")
-            genres = genres.find(class_="subtext")
-            genres = genres.find_all('a')
-            genres_list = []
-            for i in range(len(genres) - 1):
-                genres_list.append(genres[i].text)
+        #   short movie filter
+        if 'Short' in genres_list:
+            return {}
 
-            movie['genres'] = genres_list
+        #     actors
+        actors = soup.find(class_="cast_list")
+        actors = actors.find_all(class_="primary_photo")
+        actors_list = []
+        for actor in actors:
+            actor_ = actor.fetchNextSiblings()
+            actor_ = actor_[0].find_all('a')[0].text
+            actors_list.append(str(actor_).strip())
 
-            #   short movie filter
-            if 'Short' in genres_list:
-                return {}
+        movie['actors'] = actors_list
 
-            #     actors
-            actors = soup.find(class_="cast_list")
-            actors = actors.find_all(class_="primary_photo")
-            actors_list = []
-            for actor in actors:
-                actor_ = actor.fetchNextSiblings()
-                actor_ = actor_[0].find_all('a')[0].text
-                actors_list.append(str(actor_).strip())
+    except Exception as e:
+        raise Exception("this is not movie url")
+    return movie
 
-            movie['actors'] = actors_list
-
-        except Exception as e:
-            raise Exception("this is not movie url")
-        return movie
 

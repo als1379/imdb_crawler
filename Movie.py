@@ -35,7 +35,7 @@ class Director:
     def __init__(self, name, photo, age, nation):
         self.name = name
         self.photo = photo
-        self.movies = []
+        self._movies = []
         self.age = age
         self.nation = nation
         self.id = Director.add_id()
@@ -48,15 +48,17 @@ class Director:
 
     def add_movie(self, movie):
         movie.director = self
-        self.movies.append(movie)
+        self._movies.append(movie)
 
     def show_movies(self):
-        _movies = []
-        for movie in self.movies:
-            print(movie)
-            _movies.append(movie.__str__())
-        return _movies
+        movies = []
+        for movie in self._movies:
+            movies.append(movie.__str__())
+        return movies
 
     def __str__(self):
         return self.name + " " + str(self.age) + " " + self.nation
 
+    @property
+    def movies(self):
+        return self._movies

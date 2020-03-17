@@ -1,4 +1,4 @@
-from crawler import *
+from crawler import director_page_crawler, movie_page_crawler
 from Movie import Actor, Movie, Director
 
 

@@ -1,9 +1,23 @@
+class Actor:
+    actors = []
+
+    def __init__(self, name):
+        self.name = name
+        self.movies = []
+
+    def __str__(self):
+        return self.name
+
+    def __eq__(self, other):
+        if self.name == other.name:
+            return True
+        return False
 
 
 class Movie:
-    num_of_movies = 0
+    movies = []
 
-    def __init__(self, title, year, genres, rate, rate_num, actor):
+    def __init__(self, title, year, genres, rate, rate_num):
         self.title = title
         self.year = year
         self.director = None
@@ -12,25 +26,23 @@ class Movie:
         self.genres = genres
         self.rate = rate
         self.rate_num = rate_num
-        self.actors = actor
-        self.id = Director.add_id()
-
-    @classmethod
-    def add_id(cls):
-        m_id = cls.num_of_movies
-        cls.num_of_movies += 1
-        return m_id
 
     def add_actor(self, actor):
-        actor.movies.append(self)
         self.actors.append(actor)
+        actor.movies.append(self.title)
 
     def __str__(self):
         return self.title + "(" + self.year + ")" + " " + self.rate
 
+    def show_actors(self):
+        actors_ = []
+        for actor in self.actors:
+            actors_.append(actor.name)
+        return actors_
+
 
 class Director:
-    num_of_directors = 0
+    directors = []
 
     def __init__(self, name, photo, age, nation):
         self.name = name
@@ -38,19 +50,12 @@ class Director:
         self._movies = []
         self.age = age
         self.nation = nation
-        self.id = Director.add_id()
-
-    @classmethod
-    def add_id(cls):
-        d_id = cls.num_of_directors
-        cls.num_of_directors += 1
-        return d_id
 
     def add_movie(self, movie):
         movie.director = self
         self._movies.append(movie)
 
-    def show_movies(self):
+    def str_movies(self):
         movies = []
         for movie in self._movies:
             movies.append(movie.__str__())

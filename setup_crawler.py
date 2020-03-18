@@ -27,11 +27,9 @@ def movie_crawler_handler(url):
                           movie_crawl_result['rates_num'])
             for actor in movie_crawl_result['actors']:
                 movie.add_actor(actor_handler(actor))
-        print(movie)
-        print(movie.show_actors())
         return movie
     except Exception as e:
-        raise Exception('error in handler', str(e))
+        raise e
 
 
 def director_crawler_handler(url):
@@ -50,8 +48,12 @@ def director_crawler_handler(url):
             print(director)
             for i in director_crawl_result['movies']:
                 movie_url = "https://www.imdb.com" + i['url']
-                director.add_movie(movie_crawler_handler(movie_url))
+                try:
+                    director.add_movie(movie_crawler_handler(movie_url))
+                    print("crawl complete")
+                except Exception as e:
+                    print(str(e))
             Director.directors.append(director)
         return director
     except Exception as e:
-        raise Exception('error in handler', str(e))
+        print(str(e))

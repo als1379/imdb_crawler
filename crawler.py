@@ -15,10 +15,10 @@ def crawler_decorator(crawler):
 
 @crawler_decorator
 def director_page_crawler(url):
-    director = {}
-    r = requests.get(url)
-    soup = BeautifulSoup(r.text, "html.parser")
     try:
+        director = {}
+        r = requests.get(url)
+        soup = BeautifulSoup(r.text, "html.parser")
         #       director's photo
         image = soup.find(id='name-poster')
         director['photo'] = image['src']
@@ -50,18 +50,17 @@ def director_page_crawler(url):
             movies.append(movie)
         director['movies'] = movies
 
-    except Exception:
+    except Exception as e:
         raise Exception('This page is not director page')
-
     return director
 
 
 @crawler_decorator
 def movie_page_crawler(url):
-    movie = {}
-    r = requests.get(url)
-    soup = BeautifulSoup(r.text, "html.parser")
     try:
+        movie = {}
+        r = requests.get(url)
+        soup = BeautifulSoup(r.text, "html.parser")
         #      movie's title and year
         title = soup.find(id="ratingWidget")
 

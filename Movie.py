@@ -8,6 +8,9 @@ class Actor:
     def __str__(self):
         return self.name
 
+    def __repr__(self):
+        return self.name
+
     def __eq__(self, other):
         if self.name == other.name:
             return True
@@ -29,9 +32,12 @@ class Movie:
 
     def add_actor(self, actor):
         self.actors.append(actor)
-        actor.movies.append(self.title)
+        actor.movies.append(self.__str__())
 
     def __str__(self):
+        return self.title + "(" + self.year + ")" + " " + self.rate
+
+    def __repr__(self):
         return self.title + "(" + self.year + ")" + " " + self.rate
 
     def show_actors(self):
@@ -62,6 +68,9 @@ class Director:
         return movies
 
     def __str__(self):
+        return self.name + " " + str(self.age) + " " + self.nation
+
+    def __repr__(self):
         return self.name + " " + str(self.age) + " " + self.nation
 
     @property

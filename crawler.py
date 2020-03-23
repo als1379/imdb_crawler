@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import datetime
 from functools import wraps
+import concurrent.futures
 
 
 def crawler_decorator(crawler):
@@ -126,16 +127,18 @@ def top_250_crawler(url):
     r = requests.get(url)
     soup = BeautifulSoup(r.text, "html.parser")
     movies = soup.find_all(class_="titleColumn")
-    director_links = []
+    movies_links = []
     for movie in movies:
         link = movie.find('a')['href']
-        link = "https://www.imdb.com" + link
-        director_links.append("https://www.imdb.com" + find_director_url(link))
+        movies_links.append("https://www.imdb.com" + link)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        director_links = executor.map(find_director_url, movies_links)
     return director_links
 
 
 def find_director_url(url):
     r = requests.get(url)
     soup = BeautifulSoup(r.text, "html.parser")
-    director_url = soup.find_all(class_="credit_summary_item")[0].find('a')['href']
+    director_url = "https://imdb.com" + soup.find_all(class_="credit_summary_item")[0].find('a')['href']
+    print(director_url)
     return director_url

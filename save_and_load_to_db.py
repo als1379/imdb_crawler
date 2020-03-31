@@ -7,7 +7,6 @@ def save_directors_links(d_link):
     i = 1
     for link in d_link:
         c.execute("INSERT INTO dLinks VALUES ('{}')".format(link))
-        print(i, link)
         i += 1
         conn.commit()
     conn.close()
@@ -19,7 +18,6 @@ def load_directors_links():
     c.execute("SELECT * FROM dLinks")
     links = []
     for data in c.fetchall():
-        print(data[0])
         links.append(data[0])
     conn.close()
 

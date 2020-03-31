@@ -1,5 +1,6 @@
-from crawler import director_page_crawler, movie_page_crawler, top_250_crawler
+from crawler import director_page_crawler, movie_page_crawler, top_250_crawler, best_directors_crawler
 from Movie import Actor, Movie, Director
+import concurrent.futures
 
 
 def actor_handler(actors_name):
@@ -25,6 +26,7 @@ def movie_crawler_handler(url):
         Movie.movies.append(movie)
         return movie
     except Exception as e:
+        print(str(e))
         raise e
 
 
@@ -37,26 +39,31 @@ def director_crawler_handler(url):
         director = Director(director_crawl_result['name'], director_crawl_result['photo'],
                             director_crawl_result['age'], director_crawl_result['nation'])
         print(director)
+        movie_urls = []
         for i in director_crawl_result['movies']:
-            movie_url = "https://www.imdb.com" + i['url']
-            try:
-                director.add_movie(movie_crawler_handler(movie_url))
-                print("crawl complete")
-            except Exception as e:
-                print(str(e))
+            movie_urls.append("https://www.imdb.com" + i['url'])
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            movies = executor.map(movie_crawler_handler, movie_urls)
+            print("crawl complete")
+        for movie in movies:
+            print(movie)
         Director.directors.append(director)
         return director
     except Exception as e:
         print(str(e))
 
 
-def top_250_crawler_handler(url):
-    try:
-        director_links = top_250_crawler(url)
-        print(director_links)
-        for link in director_links:
-            print(link)
-            director = director_crawler_handler(link)
-            print(director, "complete")
-    except Exception as e:
-        print(str(e))
+def get_director_links(top_250_url, best_directors_url):
+    top_250_links = get_director_links_in_top_250(top_250_url)
+    best_links = get_best_directors_link(best_directors_url)
+    return top_250_links + best_links
+
+
+def get_director_links_in_top_250(url):
+    director_links = top_250_crawler(url)
+    return director_links
+
+
+def get_best_directors_link(url):
+    director_links = best_directors_crawler(url)
+    return director_links

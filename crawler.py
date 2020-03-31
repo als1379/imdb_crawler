@@ -119,6 +119,7 @@ def movie_page_crawler(url):
 
     except Exception as e:
         raise Exception("this is not movie url")
+    print(movie['title'])
     return movie
 
 
@@ -131,7 +132,7 @@ def top_250_crawler(url):
     for movie in movies:
         link = movie.find('a')['href']
         movies_links.append("https://www.imdb.com" + link)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
         director_links = executor.map(find_director_url, movies_links)
     return director_links
 
@@ -142,3 +143,15 @@ def find_director_url(url):
     director_url = "https://imdb.com" + soup.find_all(class_="credit_summary_item")[0].find('a')['href']
     print(director_url)
     return director_url
+
+
+@crawler_decorator
+def best_directors_crawler(url):
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text, "html.parser")
+    directors = soup.find_all(class_="lister-item-header")
+    directors_links = []
+    for director in directors:
+        directors_links.append("http://imdb.com" + director.find('a')['href'])
+        print("http://imdb.com" + director.find('a')['href'])
+    return directors_links

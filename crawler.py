@@ -133,11 +133,14 @@ def top_250_crawler(url):
         link = movie.find('a')['href']
         movies_links.append("https://www.imdb.com" + link)
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-        director_links = executor.map(find_director_url, movies_links)
+        try:
+            director_links = executor.map(find_director_url_in_top_250, movies_links)
+        except Exception as e:
+            print(str(e))
     return director_links
 
 
-def find_director_url(url):
+def find_director_url_in_top_250(url):
     r = requests.get(url)
     soup = BeautifulSoup(r.text, "html.parser")
     director_url = "https://imdb.com" + soup.find_all(class_="credit_summary_item")[0].find('a')['href']

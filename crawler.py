@@ -84,7 +84,7 @@ def movie_page_crawler(url):
         movie['rates_num'] = num_of_rating_
 
         #      rates num filter
-        if int(movie['rates_num']) < 10000:
+        if int(movie['rates_num']) < 5000:
             return {}
 
         #       movie's poster
